@@ -15,7 +15,7 @@ def format_lat_long(lat, long):
 
 def find_country(lat, long):
     pass
-
+ 
 
 def read_json(input="test.json"):
     with open(input) as input_json:
