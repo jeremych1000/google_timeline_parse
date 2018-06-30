@@ -37,6 +37,24 @@ def get_distinct_dates(df):
     #ret = sorted(set(dates), key=dates.index)
     return ret
 
+
+def get_no_days_in_year(list_dates):
+    list_datetime = [datetime.strptime(date, "%Y-%m-%d") for date in list_dates]
+    list_sorted = sorted(list_datetime)
+    
+    first_year = int(datetime.strftime(list_sorted[0], "%Y"))
+    last_year = int(datetime.strftime(list_sorted[-1], "%Y"))
+
+    year_dict = {}
+    for i in range(first_year, last_year+1):
+        year_dict[str(i)] = 0
+    
+    for i in list_sorted:
+        year = datetime.strftime(i, "%Y")
+        year_dict[year] += 1
+    
+    return year_dict
+
 def main():
     skip = True
 
@@ -73,7 +91,11 @@ def main():
     distinct_dates = get_distinct_dates(country_df)
     print("{} days not detected in home country (first {}, last {})".format(len(distinct_dates), distinct_dates[-1], distinct_dates[0]))
 
+    year_dict = get_no_days_in_year(distinct_dates)
+    print("Days away per year: {}".format(year_dict))
+
     with open('dates_not_in_uk.txt', 'w') as outfile:
+        outfile.write("Days away per year: {}\n---\n".format(year_dict))
         for i in range(len(distinct_dates)):
             outfile.write("{}\n".format(distinct_dates[i]))
         outfile.close()
