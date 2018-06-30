@@ -40,10 +40,10 @@ def get_distinct_dates(df):
 
 def get_no_days_in_year(list_dates):
     list_datetime = [datetime.strptime(date, "%Y-%m-%d") for date in list_dates]
-    list_sorted = sorted(list_datetime)
+    list_sorted = sorted(list_datetime, reverse=True)
     
-    first_year = int(datetime.strftime(list_sorted[0], "%Y"))
-    last_year = int(datetime.strftime(list_sorted[-1], "%Y"))
+    first_year = int(datetime.strftime(list_sorted[-1], "%Y"))
+    last_year = int(datetime.strftime(list_sorted[0], "%Y"))
 
     year_dict = {}
     for i in range(first_year, last_year+1):
