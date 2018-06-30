@@ -1,76 +1,58 @@
 import geopy
 import json
+import csv
+import pandas as pd
 import reverse_geocoder as rg
 
 from datetime import datetime
 from geopy.geocoders import Nominatim
 
-class entry():
-    def __init__(self, timestamp, latitude, longitude):
-        timestamp = int(timestamp) / 1000 # google counts in milliseconds
-        latitude = str(latitude)
-        longitude = str(longitude)
-        self.timestamp = datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%dT%H:%M:%SZ')
-        self.latitude = "{}.{}".format(latitude[0:2], latitude[2:])
-        self.longitude = "{}.{}".format(longitude[0:2], longitude[2:])
 
+def get_country_count(df, manual=False):
+    if manual:
+        country_df = pd.DataFrame(columns=["Time","Latitude","Longitude","lat","lon","name","admin1","admin2","cc"])
 
-def format_lat_long(latitude, longitude):
-    pass
-
-
-def find_country(latitude, longitude, offline=True):
-    if offline:
-        results = rg.search((latitude, longitude))
-        print(results)
-        return results
-        
+        count = 0
+        for index, row in df.iterrows():
+            if count % 1000 == 0:
+                print("\rNow on {}...".format(count), end="")
+            count += 1
+            if row["cc"] != "GB":
+                country_df = country_df.append(row)
+        return country_df
     else:
-        geolocator = Nominatim()
-        location = geolocator.reverse("{}, {}".format(latitude, longitude))
-        print(location.address)
-        print((location.latitude, location.longitude))
-        
-        country = location.raw["address"]["country"]
-        
-        print(country)
-        return country
-
-
-def find_day(timestamp):
-    pass
-
-
-def read_json(input="test.json"):
-    with open(input) as input_json:
-        return json.load(input_json)
-
-
-def strip_json(input_json):
-    # "timestampMs" : "1530209499870",
-    # "latitudeE7" : 515014068,
-    # "longitudeE7" : -1919385,
-    # 
-    ret = []
-    for line in input_json["locations"]:
-        ret.append(entry(
-            timestamp = line["timestampMs"],
-            latitude = line["latitudeE7"],
-            longitude = line["longitudeE7"]
-        ))
-    return ret
-
+        return df[df.cc != "GB"]
 
 def main():
-    entries = read_json("test.json")
-    print(entries)
+    skip = True
 
-    entries_parsed = strip_json(entries)
-    print("{} entries parsed.".format(len(entries_parsed)))
+    if not skip:
+        df = pd.read_csv("output.csv", delimiter=",")
+        #print(df)
 
-    for entry in entries_parsed:
-        country = find_country(entry.latitude, entry.longitude)
+        entries_list = []
+        for index, row in df.iterrows():
+            entries_list.append(("{:.7f}".format(row["Latitude"]), "{:.7f}".format(row["Longitude"])))
+        entries_tuple = tuple(entries_list)
+        
+        #print(entries_tuple)
+        results = rg.search(entries_tuple, mode=1)
+        #print(results)
 
+        in_len = len(df)
+        out_len = len(results)
+        assert in_len == out_len
 
+        results_df = pd.DataFrame(results)
+        combined_df = pd.concat([df, results_df], axis=1)
+        #print(combined_df)
+
+        combined_df.to_csv("to_csv.csv", index=False)
+    else:
+        print("Skipping country lookup.")
+        combined_df = pd.read_csv("to_csv.csv", delimiter=",")
+        print("Total rows: {}".format(len(combined_df)))
+    country_df = get_country_count(combined_df)
+    country_df.to_csv("to_csv_country.csv", index=False)
 
 main()

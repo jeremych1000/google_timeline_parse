@@ -1,0 +1,3 @@
+[submodule "location-history-json-converter"]
+	path = location-history-json-converter
+	url = https://github.com/Scarygami/location-history-json-converter
