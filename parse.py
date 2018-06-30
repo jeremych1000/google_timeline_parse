@@ -8,7 +8,8 @@ from datetime import datetime
 from geopy.geocoders import Nominatim
 
 
-def get_country_count(df, manual=False):
+def get_not_home(df, home='GB', manual=False):
+    print("Removing all rows that are not {}...".format(home))
     if manual:
         country_df = pd.DataFrame(columns=["Time","Latitude","Longitude","lat","lon","name","admin1","admin2","cc"])
 
@@ -17,11 +18,22 @@ def get_country_count(df, manual=False):
             if count % 1000 == 0:
                 print("\rNow on {}...".format(count), end="")
             count += 1
-            if row["cc"] != "GB":
+            if row["cc"] != home:
                 country_df = country_df.append(row)
         return country_df
     else:
-        return df[df.cc != "GB"]
+        return df[df.cc != home]
+
+
+def get_distinct_dates(df):
+    dates = []
+    for index, row in df.iterrows():
+        time = datetime.strptime(row["Time"], "%Y-%m-%d %H:%M:%S")
+        dates.append(datetime.strftime(time, "%Y-%m-%d"))
+    
+    #now get rid of duplicates
+    ret = pd.Series(dates).drop_duplicates().tolist()    
+    return ret
 
 def main():
     skip = True
@@ -52,7 +64,11 @@ def main():
         print("Skipping country lookup.")
         combined_df = pd.read_csv("to_csv.csv", delimiter=",")
         print("Total rows: {}".format(len(combined_df)))
-    country_df = get_country_count(combined_df)
+    
+    country_df = get_not_home(combined_df, home='GB')
     country_df.to_csv("to_csv_country.csv", index=False)
+
+    distinct_dates = get_distinct_dates(country_df)
+    print("{} days not detected in home country (first {}, last {})".format(len(distinct_dates), distinct_dates[-1], distinct_dates[0]))
 
 main()
