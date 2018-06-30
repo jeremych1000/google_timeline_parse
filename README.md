@@ -13,4 +13,8 @@ Find how many days you are out of your own home country.
    
 ## Instructions
 - Clone
-- `python parse.py`
+- Convert Google Timeline JSON to less heavy file using location-history-json-converter
+    - e.g. `python location_history_json_converter.py location.json -o output.csv -f csv` 
+- If running for the firs time, ensure `skip = False` in main()
+- `python parse.py` (this assumes taking in CSV)
+- Look for newly generated files.
