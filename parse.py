@@ -33,6 +33,8 @@ def get_distinct_dates(df):
     
     #now get rid of duplicates
     ret = pd.Series(dates).drop_duplicates().tolist()    
+    #or from https://stackoverflow.com/questions/45746312/one-liner-to-remove-duplicates-keep-ordering-of-list
+    #ret = sorted(set(dates), key=dates.index)
     return ret
 
 def main():
@@ -70,5 +72,10 @@ def main():
 
     distinct_dates = get_distinct_dates(country_df)
     print("{} days not detected in home country (first {}, last {})".format(len(distinct_dates), distinct_dates[-1], distinct_dates[0]))
+
+    with open('dates_not_in_uk.txt', 'w') as outfile:
+        for i in range(len(distinct_dates)):
+            outfile.write("{}\n".format(distinct_dates[i]))
+        outfile.close()
 
 main()
