@@ -45,7 +45,9 @@ def get_all_country_dates(df, home_country, min_entries_per_day):
     # check if any empty entries
     for k, v in dates.items():
         if not v:
-            print(f"WARNING - lack of data or bug means {k} has an empty list of countries")
+            print(
+                f"WARNING - lack of data or bug means {k} has an empty list of countries"
+            )
 
     return dates
 
