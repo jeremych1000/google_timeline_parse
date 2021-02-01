@@ -29,14 +29,17 @@ def get_all_country_dates(df, home_country, min_entries_per_day):
             except KeyError:
                 dates[curr_date][curr_country] = 1
 
-    print(f"Processed {index+1} of {total_rows}.")
+    print(f"\rDONE - Processed {index+1} of {total_rows}.")
 
     # now get rid of false positives
     print(
-        "Removing false positives (threshold: minimum {min_entries_per_day} entries required)..."
+        f"Removing false positives (threshold: minimum {min_entries_per_day} entries required)..."
     )
     for k, v in dates.items():
-        dates[k] = [kk for kk, vv in v.items() if vv >= min_entries_per_day]
+        if len(v) == 1:  # ignore min_entries_per_day as probably lack of data
+            dates[k] = [next(iter(v))]
+        else:
+            dates[k] = [kk for kk, vv in v.items() if vv >= min_entries_per_day]
 
     return dates
 
@@ -92,7 +95,9 @@ def get_no_days_in_year(list_dates):
     help="CSV Google Timeline Raw Output (from location-history-json-converter",
 )
 @click.option(
-    "--country-csv", default="country.csv", help="Reverse Geocoded CSV with countries"
+    "--country-csv",
+    default="country.generated.csv",
+    help="Reverse Geocoded CSV with countries",
 )
 @click.option("--home-country", default="GB", help="Home Country Code")
 @click.option(
@@ -114,8 +119,8 @@ def main(
     count_part_day,
     min_entries_per_day,
 ):
-    dates_full_csv_name = "dates_full.csv"
-    dates_not_in_country_csv_name = "dates_not_in_country.csv"
+    dates_full_csv_name = "dates_full.generated.csv"
+    dates_not_in_country_txt_name = "dates_not_in_country.generated.txt"
 
     if not skip_country_lookup:
         print(
@@ -158,9 +163,9 @@ def main(
 
     print("Getting all country dates...")
     all_dates = get_all_country_dates(combined_df, home_country, min_entries_per_day)
-    with open(dates_full_csv_name, 'w') as f:
+    with open(dates_full_csv_name, "w") as f:
         writer = csv.writer(f)
-        header = ['date', 'countries_visited']
+        header = ["date", "countries_visited"]
         writer.writerow(header)
         writer.writerows(all_dates.items())
     print("DONE - Getting all country dates...")
@@ -173,20 +178,25 @@ def main(
     )
     print("DONE - Getting all out of country dates.")
 
-    print(
-        "{} days not detected in home country (first {}, last {})".format(
-            len(out_of_country_dates), out_of_country_dates[-1], out_of_country_dates[0]
+    if out_of_country_dates:
+        print(
+            "{} days not detected in home country (earliest {}, latest {})".format(
+                len(out_of_country_dates),
+                out_of_country_dates[0],
+                out_of_country_dates[-1],
+            )
         )
-    )
 
-    year_dict = get_no_days_in_year(out_of_country_dates)
-    print("Days away per year: {}".format(year_dict))
+        year_dict = get_no_days_in_year(out_of_country_dates)
+        print("Days away per year: {}".format(year_dict))
 
-    with open("dates_not_in_uk.txt", "w") as outfile:
-        outfile.write("Days away per year: {}\n---\n".format(year_dict))
-        for i in range(len(out_of_country_dates)):
-            outfile.write("{}\n".format(out_of_country_dates[i]))
-        outfile.close()
+        with open(dates_not_in_country_txt_name, "w") as outfile:
+            outfile.write("Days away per year: {}\n---\n".format(year_dict))
+            for i in range(len(out_of_country_dates)):
+                outfile.write("{}\n".format(out_of_country_dates[i]))
+            outfile.close()
+    else:
+        print("No days detected out of country.")
 
 
 if __name__ == "__main__":
