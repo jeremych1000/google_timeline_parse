@@ -185,19 +185,15 @@ def main(
     print("DONE - Getting all out of country dates.")
 
     if out_of_country_dates:
-        print(
-            "{} days not detected in home country (earliest {}, latest {})".format(
-                len(out_of_country_dates),
-                out_of_country_dates[0],
-                out_of_country_dates[-1],
-            )
-        )
+        summary = f"{len(out_of_country_dates)} days not detected in home country (earliest {out_of_country_dates[0]}, latest {out_of_country_dates[-1]})"
+        print(summary)
 
         year_dict = get_no_days_in_year(out_of_country_dates)
         print("Days away per year: {}".format(year_dict))
 
         with open(dates_not_in_country_txt_name, "w") as outfile:
-            outfile.write("Days away per year: {}\n---\n".format(year_dict))
+            outfile.write(f"Days away per year: {year_dict}\n---\n")
+            outfile.write(summary)
             for i in range(len(out_of_country_dates)):
                 outfile.write("{}\n".format(out_of_country_dates[i]))
             outfile.close()
