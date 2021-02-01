@@ -36,12 +36,16 @@ def get_all_country_dates(df, home_country, min_entries_per_day):
         f"Removing false positives (threshold: minimum {min_entries_per_day} entries required)..."
     )
     for k, v in dates.items():
-        if (
-            len(v) == 1 or home_country not in v.keys()
-        ):  # ignore min_entries_per_day as probably lack of data
+        # ignore min_entries_per_day as probably lack of data
+        if len(v) == 1 or home_country not in v.keys():
             dates[k] = [next(iter(v))]
         else:
             dates[k] = [kk for kk, vv in v.items() if vv >= min_entries_per_day]
+
+    # check if any empty entries
+    for k, v in dates.items():
+        if not v:
+            print(f"WARNING - lack of data or bug means {k} has an empty list of countries")
 
     return dates
 
